@@ -91,39 +91,6 @@ class VideojuegoController extends Controller implements HasMiddleware
         //
     }
 
-    public function poseo()
-    {
-        $videojuegos = Videojuego::orderBy('nombre', 'asc')->get();
-        $usuario = request()->user();
-        $videojuegosPoseidos = $usuario->posesiones->pluck('id')->toArray(); // Obtener los videojuegos que el usuario posee
-
-        return view('videojuegos.poseo', compact('videojuegos', 'videojuegosPoseidos'));
-    }
-
-    public function togglePoseo(Request $request)
-    {
-        // Validar que el ID sea un número válido y exista en la base de datos
-        $request->validate([
-            'videojuego_id' => 'required|integer|exists:videojuegos,id',
-        ]);
-
-        $usuario = request()->user();
-        $videojuegoId = (int) $request->input('videojuego_id'); // Convertir a entero
-
-        if ($request->input('accion') === 'quitar') {
-            // Si el usuario ya posee el videojuego, lo eliminamos
-            $usuario->posesiones()->detach($videojuegoId);
-            return redirect()->back()->with('success', 'Has eliminado este videojuego de tu colección.');
-        } else {
-            // Si el usuario no lo posee, lo agregamos
-            $usuario->posesiones()->attach($videojuegoId);
-            return redirect()->back()->with('success', 'Has añadido este videojuego a tu colección.');
-        }
-    }
-
-
-
-
 
     /**
      * Show the form for editing the specified resource.
