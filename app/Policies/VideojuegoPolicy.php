@@ -39,9 +39,9 @@ class VideojuegoPolicy
      */
     public function update(User $user, Videojuego $videojuego): Response
     {
-        return $user->name == 'admin'
+        return $user->name == 'admin' || $user->posesiones->contains('videojuego_id', $videojuego->id)
             ? Response::allow()
-            : Response::deny("No tienes permisos de administrador.");
+            : Response::deny("No tienes permisos.");
     }
 
     /**

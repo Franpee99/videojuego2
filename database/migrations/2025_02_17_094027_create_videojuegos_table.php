@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->year('anyo');
-            $table->foreignId('desarrolladora_id')->constrained()->ondelete('cascade');
+            $table->foreignId('desarrolladora_id')->constrained();
             $table->timestamps();
         });
     }

@@ -10,6 +10,9 @@ Route::get('/', function () {
 
 Route::resource('videojuegos', VideojuegoController::class);
 
+Route::get('/videojuegos/poseo', [VideojuegoController::class, 'poseo'])->name('videojuegos.poseo');
+Route::post('/videojuegos/poseo/toggle', [VideojuegoController::class, 'togglePoseo'])->name('videojuegos.poseo.toggle');
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
