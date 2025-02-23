@@ -109,7 +109,9 @@ class VideojuegoController extends Controller implements HasMiddleware
      */
     public function update(UpdateVideojuegoRequest $request, Videojuego $videojuego)
     {
-        //
+        $videojuego->fill($request->input());
+        $videojuego->save();
+        return redirect()->route('videojuegos.index');
     }
 
     /**

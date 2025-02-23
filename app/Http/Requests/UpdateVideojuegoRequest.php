@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UpdateVideojuegoRequest extends FormRequest
 {
@@ -11,7 +12,8 @@ class UpdateVideojuegoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return Auth::check() && Auth::user()->name === 'admin'; // Solo el admin puede crear videojuegos
+
     }
 
     /**
@@ -22,7 +24,8 @@ class UpdateVideojuegoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'nombre' => 'required|string|max:255',
+            'desarrolladora_id' => 'required|exists:desarrolladoras,id',
         ];
     }
 }
