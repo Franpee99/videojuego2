@@ -27,6 +27,7 @@ class UpdateVideojuegoRequest extends FormRequest
         return [
             'titulo' => 'required|string|max:255',
             'anyo' => 'required|integer',
+            // 'anyo' => 'required|integer|min:1900|max:' . date('Y'),
             'desarrolladora_id' => 'required|exists:desarrolladoras,id',
         ];
     }

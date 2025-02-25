@@ -1,0 +1,703 @@
+﻿Creamos la carpeta donde vamos a iniciar el proyecto
+
+
+composer create-project laravel/laravel (nombre del proyecto)
+
+
+Dentro ya del proyecto:
+composer install
+npm install
+composer require laravel/breeze --dev
+php artisan breeze:install     /  php artisan breeze:install blade
+npm install -D flowbite
+
+
+Crear usuario y BD:
+sudo -u postgres createuser -P tienda
+sudo -u postgres createdb -O tienda tienda
+psql -h localhost -U tienda -d tienda
+
+
+En .env modificar los datos de la BD:
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=tienda
+DB_USERNAME=tienda
+DB_PASSWORD=1234
+
+
+Crear las migraciones:
+php artisan make:model -cmrfs (Nombre del modelo, en SINGULAR y primera letra Mayúscula)
+php artisan migrate (para aplicar las migraciones)
+
+
+Editar las tablas
+Cuando se termine de editar hacer un fresh para que se actualice a la BD
+
+
+Meter los datos en la BD (php artisan db)
+ej:         insert into articulos (codigo, descripcion, precio)
+        values(1, 'Tornillo', 2.5),
+                (2, 'Martillo', 9);
+
+
+Nos creamos la capeta del modelo en resources -> views
+
+
+Creamos en dicha carpeta el archivo index.blade.php
+Añadimos lo que vayamos a poner (copia y pega de otro proyecto)
+
+
+Añadir la ruta a web.php
+
+
+En el controlador de dicho modelo, en la funcion index() añadimos el retorno de la vista (mirar en otros proyectos)
+
+
+Configura flowbite para que se vea:
+en tailwind.config.js añadir: 
+                                plugins: [
+                                        forms,
+                                        require('flowbite/plugin')
+                                    ],
+en app.js añadir: 
+                        import 'flowbite';
+
+
+
+
+Cuando se hace la creacion de algo (articulos ej) hay que acordarse que al final del todo (una vez validado(store), creado(create) y creado el archivo create.blade.php) pone lo de $fillable en articulos.php
+
+
+Cuando tenemos UNA RELACION MUCHOS MUCHOS:
+crear tabla pivote:
+                        php artisan make:migration create_articulo_factura_table
+                        php artisan migrate
+establecer las claves foraneas en la migracion
+
+
+En caso de que le pones el nombre de la migracion que quieras en los modelos donde estan las relaciones tienes que poner el nombre de esa migracion:
+ej:
+* php artisan make:migration create_posesiones_table
+En los respectivos modelos:
+* public function videojuegos()
+*    {
+*        return $this->belongsToMany(Videojuego::class, 'posesiones');
+*    }
+
+
+* public function users()
+*    {
+*        return $this->belongsToMany(User::class, 'posesiones');
+*    }
+
+
+
+
+
+
+
+
+Despues poner en los modelos de cada tabla(Articulo.php - Departamento.php), una funcion que relacione con la tabla pivote (también poner en cada modelo la relacion del otro -> Articulo.php -> function facturas()... (poner la relacion del contrario))
+
+
+
+
+ANEXO:
+        Para que salgan los mensajes de articulo creado.. al crearlo hay que añadir de otro proyecto parte de el archivo app.blade.php.
+        
+        Para el que no de fallo en el logeo, por no iniciar sesion, copiar y pegar el archivo navigation.blade.php y adaptarlo tu proyecto claro.
+
+
+
+
+SEMILLA:
+En la carpeta seeders añadir lo que queramos añadir, y en DataBaseSeeders.php añadir la funcion para que sea llamada ese seeders que hayamos creado.
+
+
+
+
+
+
+
+
+
+
+FACTORÍA:
+Para crear los datos de la factoria una vez puesto en su archivo(NoticiaFactory.php), tenemos que abrir la terminal y poner el siguiente comando para generar esos datos fakes:
+* php artisan tinker
+* (en caso de que no haiga usuarios creados : \App\Models\User::factory()->create(['id' => 1]);
+* una vez dentro: \App\Models\Noticia::factory()->count(10)->create();
+
+
+PAGINACIÓN:
+En la ruta se pone el paginate(x) ej: 
+Route::get('/', function () {
+   return view('portada', [
+       'noticias' => Noticia::orderBy('created_at',
+                   'desc')->paginate(8),
+   ]);
+})->name('home');
+
+
+y despues se pone donde quieres aplicar la paginación:
+           <div class="mt-2">
+               {{ $noticias->links() }}
+           </div>
+
+
+
+
+BORRADO SUAVE:
+Donde vayamos a integrar el borrado suave, ponemos en su respectivo modelo (Noticia.php):
+* use Illuminate\Database\Eloquent\SoftDeletes;
+* y poner al lado de HasFactory-> , softDeletes;
+En el Policy (NoticiaPolicy.php) se añade en la función delete:
+*    public function delete(User $user, Noticia $noticia): Response
+*    {
+*        return $user->name == 'admin' || $user->id === $noticia->user_id
+*            ? Response::allow()
+*            : Response::deny("El usuario no es el creador de la noticia.");
+*    }
+
+
+Despues hacemos la siguiente migracion:
+* php artisan make:migration --table=noticias add_noticias_deleted_at_column
+* hacemos el php artisan migrate 
+* y añadimos esa columna en la base de datos (php artisan db): ALTER TABLE noticias ADD COLUMN deleted_at TIMESTAMP NULL; (se podría meter en laravel creo)
+Añadimos en la migracion:
+* function up: $table->softDeletes();
+* function down: $table->dropSoftDeletes();
+y ya el @can en dicho front-end ej; componente de noticias.blade.php (fijarse en el proyecto meneame).
+
+
+INSERTAR IMAGEN:
+* Observar el proyecto agitame, en noticiasController y ver en el store lo que hay puesto.
+* Crear una carpeta imagenes en storage/app/public
+* Y crear un enlace simbólico con la carpeta public del proyecto: php artisan storage:link
+
+
+* En Noticia.php hacer una funcion getRutaImagen()
+*    public function getRutaImagen()
+*    {
+*        return asset('storage/imagenes/' . $this->id . '.jpg');
+*    }
+* }
+* Para ser llamada para cuando quieras enseñar la imagen:
+En vez de $noticia->imagen ahora es $noticia->getRutaImagen(), para que vaya a la ruta.
+ej:    <div>
+       <img src="{{ $noticia->getRutaImagen() }}" />
+   </div>
+        
+* Y ya actualizar el formulario para que acepte subida de imagenes:
+Añadir a la etiqueta form: enctype=”multipart/form-data”
+
+
+* Y su respectivo input de subida de imagenes (create.blade.php de noticias).
+
+
+
+
+INSERTAR IMAGEN SIN ESTAR RELACIONADO CON EL USER:
+public function store(StoreAlbumRequest $request)
+   {
+       $archivo = $request->file('imagen');
+
+
+       $album = new Album($request->input());
+
+
+       // Guardar el álbum sin imagen todavía
+       $album->save();
+
+
+       // Procesar la imagen si se subió
+       if ($request->hasFile('imagen')) {
+           $nombre = $album->id . '.jpg';
+
+
+           // Guardar la imagen en "storage/app/public/imagenes"
+           $archivo->storeAs('imagenes', $nombre, 'public');
+
+
+           // Guardar la ruta relativa en la base de datos (NO usar asset())
+           $album->imagen = "imagenes/$nombre";
+       }
+
+
+       // Guardar nuevamente el álbum con la imagen (o dejarlo NULL si no hay imagen)
+       $album->save();
+
+
+       return redirect()->route('albumes.index');
+   }
+
+
+CAMBIAR LA IMAGEN POR OTRA (EDIT.BLADE.PHP):
+public function update(UpdateAlbumRequest $request, Album $album)
+   {
+       $album->titulo = $request->titulo;
+       $album->anyo = $request->anyo;
+
+
+       // Si el usuario sube una nueva imagen, la reemplazamos
+       if ($request->hasFile('imagen')) {
+           $archivo = $request->file('imagen');
+           $nombre = $album->id . '.jpg';
+
+
+           // Eliminar la imagen anterior si existe
+           if ($album->imagen && file_exists(storage_path('app/public/' . $album->imagen))) {
+               unlink(storage_path('app/public/' . $album->imagen));
+           }
+
+
+           // Guardar la nueva imagen en "storage/app/public/imagenes"
+           $archivo->storeAs('imagenes', $nombre, 'public');
+
+
+           // Actualizar la ruta de la imagen en la base de datos
+           $album->imagen = "imagenes/$nombre";
+       }
+
+
+       $album->save(); // Guardamos los cambios en la base de datos
+
+
+       return redirect()->route('albumes.index');
+   }
+
+
+CAMBIAR LA IMAGEN CON EL ID NOTICIA (MENEAME):
+   public function update(UpdateNoticiaRequest $request, Noticia $noticia)
+   {
+       //En vez de poner aqui la validacion, se pone en el UpdateNoticiaRequest
+
+
+      // Autorizar la edición
+       Gate::authorize('update', $noticia);
+
+
+       // Actualizar los datos del formulario
+       $noticia->fill($request->only(['titular', 'url', 'descripcion', 'categoria_id']));
+
+
+       // Si el usuario sube una nueva imagen, la reemplazamos
+       if ($request->hasFile('imagen')) {
+           $archivo = $request->file('imagen');
+           $nombre = $noticia->id . '.jpg'; // Mantiene el mismo nombre de archivo que en store()
+
+
+           // Eliminar la imagen anterior si existe
+           if ($noticia->imagen) {
+               $rutaAnterior = str_replace(asset('storage/'), '', $noticia->imagen);
+               if (Storage::disk('public')->exists($rutaAnterior)) {
+                   Storage::disk('public')->delete($rutaAnterior);
+               }
+           }
+
+
+           // Guardar la nueva imagen en "storage/app/public/imagenes"
+           $archivo->storeAs('imagenes', $nombre, 'public');
+
+
+           // Actualizar la ruta de la imagen en la base de datos
+           $noticia->imagen = asset("storage/imagenes/$nombre");
+       }
+
+
+       $noticia->save();
+
+
+       return redirect()->route('home');
+   }
+
+
+
+
+TEST:
+Para hacer los test y que cada vez que hagas uno no se te borre toda la base de datos, tenemos que crearnos un .env.testing (cp .env .env.testing)
+cambiamos:
+* APP_ENV=local
+* por: APP_ENV=testing
+* y cambiamos: DB_DATABASE=meneame
+* por: DB_DATABASE=meneame_test
+
+
+Tenemos que crearnos la base de datos de test:
+* sudo -u postgres createdb -O meneame meneame_test
+
+
+Crear el archivo test:
+* php artisan make:test AlbumTest
+
+
+Para ejecutar los test: 
+* php artisan test
+
+
+**En caso de que ejecutemos el test, para volver a que funciona la semilla:
+* php artisan migrate:fresh –seed
+
+
+
+
+SEMILLA:
+En la semilla podemos llamar a las respectivas factorias para poner en funcionamiento la Factoria (CREO QUE ES PARA QUE SE EJECUTEN LOS TEST):
+
+
+en database/seeders/DatabaseSeeder.php ponemos la llamada las diferentes semillas
+ej:
+this->call([
+           UserSeeder::class,
+           CategoriaSeeder::class,
+           NoticiaSeeder::class,
+       ]);
+
+
+y ya en cada semilla hacemos correr la factoria respectiva.
+ej:
+NoticiaSeeder.php:
+public function run(): void
+   {
+       Noticia::factory()->count(20)->create();
+   }
+
+
+
+
+Para los user no hay semilla, tenemos que crearla nosotros:
+* php artisan make:seeder UserSeeder
+
+
+Una vez dentro: 
+public function run(): void
+   {
+       User::factory()->create();
+   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PLURAL EN MODELOS:
+
+
+En el modelo se añade esto:
+* protected $table = ‘posesiones’;
+
+
+Y en la migracion en  up() y en el down() se cambia posesions por posesiones
+
+
+en la migracion, donde vayamos a poner la clave foránea tenemos que declarar el nombre de la tabla:
+* $table->foreignId(‘posesiones_id’)->constrained(‘posesiones’);
+
+
+
+
+LIVEWIRE:
+Instalar livewire en un proyecto que no lo esta:
+* composer require livewire/livewire
+* php artisan livewire:publish --config
+ 
+y ya el nombre para hacer el livewire:
+ej:
+* php artisan make:livewire SeleccionDistribuidora
+
+
+
+
+
+
+POLIMORFICA:
+
+
+en dicha migracion donde va la polimorifca:
+* $table->morphs(‘comentable’); // Crea `comentable_id` y `comentable_type`
+
+
+en el modelo donde va la polimorfica:
+* public function comentable() { 
+return $this->morphTo(); 
+}
+
+
+y ya en los modelos donde haya que poner el comentario, poner:
+* public function comentarios() { 
+return $this->morphMany(Comment::class, 'comentable'); 
+}
+
+
+En caso de que la relacion sea uno a uno se pone: (equivale al belongTo)
+* public function photo() { 
+return $this->morphOne(Photo::class, 'photoable'); 
+}
+(el morphTo donde se crea la relacion polimorfica se queda igual)
+
+
+Para insertar datos en las polimorficas desde la terminal:
+*  INSERT INTO dispositivos (nombre, colocable_type, colocable_id, created_at, updated_at)
+VALUES ('Teclado', 'App\Models\Ordenador', 1, NOW(), NOW());
+
+
+
+
+
+
+Para la ordenacion(index.blade.php):
+
+
+<a href="{{ route('libros.index', ['sort' => 'titulo', 'direction' => ($column == 'titulo' && $direction == 'asc') ? 'desc' : 'asc']) }}">
+Año
+</a>
+
+
+
+
+
+
+
+
+
+
+ORDENACION:
+Mejor manera (relacion directa sin tabla pivote):
+
+
+public function index(Request $request)
+   {
+       // Obtener la columna y dirección de ordenación con valores predeterminados
+       $column = $request->query('sort', 'editorial');
+       $direction = $request->query('direction', 'asc');
+
+
+       // Validar columnas permitidas
+       if (!in_array($column, ['editorial', 'autor'])) {
+           $column = 'editorial';
+       }
+
+
+       // Obtener los libros del usuario con las relaciones necesarias
+       $libros = Auth::user()->libros;
+
+
+       // Aplicar ordenación después de obtener los libros (ordenación manual en colección)
+       if ($column === 'editorial') {
+           $libros = $libros->sortBy(fn($libro) => $libro->editorial->nombre ?? '')->values();
+       } elseif ($column === 'autor') {
+           $libros = $libros->sortBy(fn($libro) => $libro->autores->isNotEmpty() ? $libro->autores->first()->nombre : '')->values();
+       }
+
+
+       // Invertir si la dirección es descendente
+       if ($direction === 'desc') {
+           $libros = $libros->reverse()->values();
+       }
+
+
+       return view('libros.index', compact('libros', 'column', 'direction'));
+
+
+
+
+En caso de querer añadirle propiedades del mismo modelo, se le añade aqui y listo:
+
+
+if (!in_array($column, ['editorial', 'autor', 'titulo','anyo'])) {
+           $column = 'editorial';
+       }
+
+
+
+
+
+
+
+
+
+
+cuando no hay relacion (es propiedades del mismo modelo)
+
+
+public function index(Request $request)
+   {
+       $column = $request->query('sort', 'titulo');
+       $direction = $request->query('direction', 'asc');
+
+
+
+
+       if (!in_array($column, ['titulo', 'autor'])) {
+           $column = 'titulo';
+       }
+
+
+           // Obtener los libros ordenados correctamente
+       $libros = Libro::orderBy($column, $direction)->get();
+
+
+       return view('libros.index', compact('libros', 'column', 'direction'));
+   }
+
+
+
+
+
+
+Cuando tienes ordenacion por numero:
+public function index(Request $request)
+   {
+       $column = $request->query('sort', 'titulo');
+       $direction = $request->query('direction', 'asc');
+
+
+
+
+       if (!in_array($column, ['titulo', 'autor', 'reseñas_count'])) {
+           $column = 'titulo';
+       }
+
+
+       // Obtener los libros ordenados correctamente
+       $libros = Libro::withCount('reseñas')->orderBy($column, $direction)->get();
+
+
+       return view('libros.index', compact('libros', 'column', 'direction'));
+   }
+
+
+
+
+cuando hay una sola relacion:
+
+
+public function show(Request $request, Album $album)
+   {
+
+
+       $column = $request->query('sort', 'canciones.titulo');
+       $direction = $request->query('direction', 'asc');
+
+
+
+
+       if (!in_array($column, ['canciones.titulo', 'canciones.created_at'])) {
+           $column = 'canciones.titulo';
+       }
+
+
+       // Obtener las canciones asociadas al álbum con ordenación y paginación
+       $canciones = $album->canciones()
+           ->orderBy($column, $direction)
+           ->paginate(2);
+
+
+       // Calcular la duración total del álbum
+       $duracion_total = $album->canciones()->sum('duracion');
+
+
+       return view('albumes.show', [
+           'album' => $album,
+           'canciones' => $canciones,
+           'duracion_total' => $duracion_total,
+           'column' => $column,
+           'direction' => $direction,
+       ]);
+   }
+
+
+
+
+Cuando hay relaciones 
+public function index(Request $request)
+   {
+       // Obtener la columna y dirección de ordenación con valores predeterminados
+       $column = $request->query('sort', 'editorial');
+       $direction = $request->query('direction', 'asc');
+
+
+       // Validar columnas permitidas
+       if (!in_array($column, ['editorial', 'autor'])) {
+           $column = 'editorial';
+       }
+
+
+       // Obtener los libros del usuario con las relaciones necesarias
+       $libros = Libro::whereHas('colecciones', function ($query) {
+           $query->where('user_id', Auth::id());
+       })->with(['editorial', 'autores'])->get();
+
+
+       // Aplicar ordenación después de obtener los libros (ordenación manual en colección)
+       if ($column === 'editorial') {
+           $libros = $libros->sortBy(fn($libro) => $libro->editorial->nombre ?? '')->values();
+       } elseif ($column === 'autor') {
+           $libros = $libros->sortBy(fn($libro) => $libro->autores->isNotEmpty() ? $libro->autores->first()->nombre : '')->values();
+       }
+
+
+       // Invertir si la dirección es descendente
+       if ($direction === 'desc') {
+           $libros = $libros->reverse()->values();
+       }
+
+
+       return view('libros.index', compact('libros', 'column', 'direction'));
+       // return view('libros.index', compact('libros'));
+   }
+
+
+
+
+
+
+
+
+public function index(Request $request)
+   {
+       $user = request()->user(); // Usuario autenticado
+
+
+       $column = $request->query('sort', 'desarrolladoras.nombre');
+       $direction = $request->query('direction', 'asc');
+
+
+       if (!in_array($column, ['desarrolladoras.nombre', 'distribuidoras.nombre'])) {
+           $column = 'desarrolladoras.nombre';
+       }
+
+
+       // Creamos la consulta base
+       $query = Videojuego::with(['desarrolladora', 'desarrolladora.distribuidora'])
+           ->join('desarrolladoras', 'videojuegos.desarrolladora_id', '=', 'desarrolladoras.id')
+           ->leftJoin('distribuidoras', 'desarrolladoras.distribuidora_id', '=', 'distribuidoras.id')
+           ->select('videojuegos.*', 'desarrolladoras.nombre as desarrolladora_nombre', 'distribuidoras.nombre as distribuidora_nombre');
+
+
+       // Aplicamos filtro solo si el usuario NO es admin
+       if ($user->name !== 'admin') {
+           $query = $query->whereHas('posesiones', function ($subquery) use ($user) { //en caso de que el usuario posea el videojuego lo mostramos
+               $subquery->where('user_id', $user->id);
+           });
+       }
+
+
+       // Aplicamos ordenación y paginación
+       $videojuegos = $query->orderBy($column, $direction)->paginate(10);
+
+
+       return view('videojuegos.index', compact('videojuegos', 'column', 'direction'));
+   }
