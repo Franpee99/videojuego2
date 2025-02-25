@@ -15,9 +15,9 @@ class Videojuego extends Model
 
     protected $fillable = ['titulo', 'anyo', 'desarrolladora_id'];
 
-    public function posesiones()
+    public function users()
     {
-        return $this->hasMany(Posesion::class);
+        return $this->belongsToMany(User::class, 'posesiones');
     }
 
     public function desarrolladora()

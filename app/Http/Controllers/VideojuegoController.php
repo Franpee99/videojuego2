@@ -28,7 +28,7 @@ class VideojuegoController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        $user = request()->user(); // Usuario autenticado
+        // $user = request()->user(); // Usuario autenticado
 
         $column = $request->query('sort', 'desarrolladoras.nombre');
         $direction = $request->query('direction', 'asc');
@@ -38,17 +38,11 @@ class VideojuegoController extends Controller implements HasMiddleware
         }
 
         // Creamos la consulta base
-        $query = Videojuego::with(['desarrolladora', 'desarrolladora.distribuidora'])
-            ->join('desarrolladoras', 'videojuegos.desarrolladora_id', '=', 'desarrolladoras.id')
-            ->leftJoin('distribuidoras', 'desarrolladoras.distribuidora_id', '=', 'distribuidoras.id')
-            ->select('videojuegos.*', 'desarrolladoras.nombre as desarrolladora_nombre', 'distribuidoras.nombre as distribuidora_nombre');
-
-        // Aplicamos filtro solo si el usuario NO es admin
-        if ($user->name !== 'admin') {
-            $query = $query->whereHas('posesiones', function ($subquery) use ($user) { //en caso de que el usuario posea el videojuego lo mostramos
-                $subquery->where('user_id', $user->id);
-            });
-        }
+        $query = Auth::user()->videojuegos() //solo lo videojuegos que posee el usuario
+        ->with(['desarrolladora', 'desarrolladora.distribuidora'])
+        ->join('desarrolladoras', 'videojuegos.desarrolladora_id', '=', 'desarrolladoras.id')
+        ->leftJoin('distribuidoras', 'desarrolladoras.distribuidora_id', '=', 'distribuidoras.id')
+        ->select('videojuegos.*', 'desarrolladoras.nombre as desarrolladora_nombre', 'distribuidoras.nombre as distribuidora_nombre');
 
         // Aplicamos ordenación y paginación
         $videojuegos = $query->orderBy($column, $direction)->paginate(10);

@@ -12,9 +12,9 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    public function posesiones()
+    public function videojuegos()
     {
-        return $this->hasMany(Posesion::class);
+        return $this->belongsToMany(Videojuego::class, 'posesiones');
     }
 
     /**

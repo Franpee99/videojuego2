@@ -52,17 +52,17 @@
                                         <td class="px-6 py-4 flex items-center">
                                             <a href="{{ route('videojuegos.edit', $videojuego) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</a>
 
-                                            @can('delete', $videojuego)
-                                                <form method="POST" action="{{ route('videojuegos.destroy', $videojuego) }}">
-                                                    @method('DELETE')
-                                                    @csrf
-                                                    <a href="{{ route('videojuegos.destroy', $videojuego) }}"
-                                                       class="font-medium text-red-600 dark:text-red-500 hover:underline ms-3"
-                                                       onclick="event.preventDefault(); if (confirm('¿Está seguro?')) this.closest('form').submit();">
-                                                       Eliminar
-                                                    </a>
-                                                </form>
-                                            @endcan
+                                        @can('delete', $videojuego)
+                                            <form method="POST" action="{{ route('videojuegos.destroy', $videojuego) }}">
+                                                @method('DELETE')
+                                                @csrf
+                                                <a href="{{ route('videojuegos.destroy', $videojuego) }}"
+                                                    class="font-medium text-red-600 dark:text-red-500 hover:underline ms-3"
+                                                    onclick="event.preventDefault(); if (confirm('¿Está seguro?')) this.closest('form').submit();">
+                                                    Eliminar
+                                                </a>
+                                            </form>
+                                        @endcan
                                         </td>
                                     </tr>
                                 @endforeach
