@@ -12,7 +12,8 @@ class UpdateVideojuegoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->name === 'admin'; // Solo el admin puede crear videojuegos
+        return true;
+        // Auth::check() && Auth::user()->name === 'admin'; // Solo el admin puede crear videojuegos
 
     }
 
@@ -24,7 +25,8 @@ class UpdateVideojuegoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => 'required|string|max:255',
+            'titulo' => 'required|string|max:255',
+            'anyo' => 'required|integer',
             'desarrolladora_id' => 'required|exists:desarrolladoras,id',
         ];
     }

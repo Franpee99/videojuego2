@@ -95,6 +95,7 @@ class VideojuegoController extends Controller implements HasMiddleware
 
         return view('videojuegos.edit', [
             'videojuego' => $videojuego,
+            'desarrolladoras' => Desarrolladora::all(),
         ]);
     }
 
